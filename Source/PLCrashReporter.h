@@ -34,6 +34,7 @@
 
 @class PLCrashMachExceptionServer;
 @class PLCrashMachExceptionPortSet;
+@protocol PLCrashReporterDelegate; // DM
 
 /**
  * @ingroup functions
@@ -115,6 +116,8 @@ typedef struct PLCrashReporterCallbacks {
 
 - (instancetype) initWithConfiguration: (PLCrashReporterConfig *) config;
 
+@property (nonatomic, assign) id <PLCrashReporterDelegate> delegate; // DM
+
 - (BOOL) hasPendingCrashReport;
 
 - (NSData *) loadPendingCrashReportData;
@@ -122,18 +125,38 @@ typedef struct PLCrashReporterCallbacks {
 
 - (NSData *) generateLiveReportWithThread: (thread_t) thread;
 - (NSData *) generateLiveReportWithThread: (thread_t) thread error: (NSError **) outError;
+- (NSData *) generateLiveReportWithThread: (thread_t) thread exception: (NSException *) exception error: (NSError **) outError; // DM
 
 - (NSData *) generateLiveReport;
 - (NSData *) generateLiveReportAndReturnError: (NSError **) outError;
+- (NSData *) generateLiveReportWithException: (NSException *) exception error: (NSError **) outError; // DM
 
 - (BOOL) purgePendingCrashReport;
 - (BOOL) purgePendingCrashReportAndReturnError: (NSError **) outError;
 
 - (BOOL) enableCrashReporter;
 - (BOOL) enableCrashReporterAndReturnError: (NSError **) outError;
+- (void) setupExceptionHandlerIfNeeded; // DM
 
 - (void) setCrashCallbacks: (PLCrashReporterCallbacks *) callbacks;
 
 @property(nonatomic, strong) NSData *customData;
+
+@end
+
+
+// DM
+typedef NS_ENUM(NSUInteger, PLReportType)
+{
+    PLReportTypeCrash = 0,
+    PLReportTypeException
+};
+
+// DM
+@protocol PLCrashReporterDelegate <NSObject>
+@optional
+
+- (void)reporter:(PLCrashReporter *)reporter didGenerateReport:(NSData *)report ofType:(PLReportType)reportType;
+- (void)reporter:(PLCrashReporter *)reporter didFailGenerateReportOfType:(PLReportType)reportType withError:(NSError *)error;
 
 @end

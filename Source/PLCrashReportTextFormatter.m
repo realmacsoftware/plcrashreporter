@@ -49,6 +49,12 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
  */
 @implementation PLCrashReportTextFormatter
 
+static const NSUInteger uuidSeparatorStartIndex = 8;
+static const NSUInteger uuidSeparatorCount = 4;
+static const NSUInteger uuidSeparatorIndexDelta = 5;
+
+static NSString *uuidSeparator = @"-";
+
 
 /**
  * Formats the provided @a report as human-readable text in the given @a textFormat, and return
@@ -59,7 +65,18 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
  *
  * @return Returns the formatted result on success, or nil if an error occurs.
  */
-+ (NSString *) stringValueForCrashReport: (PLCrashReport *) report withTextFormat: (PLCrashReportTextFormat) textFormat {
+
++ (NSString *) stringValueForCrashReport: (PLCrashReport *) report withTextFormat: (PLCrashReportTextFormat) textFormat
+{
+    return [PLCrashReportTextFormatter stringValueForCrashReport:report
+                                                  withTextFormat:textFormat
+                                                 reporterVersion:nil];
+}
+
++ (NSString *) stringValueForCrashReport: (PLCrashReport *) report
+                          withTextFormat: (PLCrashReportTextFormat) textFormat
+                         reporterVersion: (NSString *)reporterVersion
+{
 	NSMutableString* text = [NSMutableString string];
 	boolean_t lp64 = true; // quiesce GCC uninitialized value warning
 
@@ -244,7 +261,10 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
         
         [text appendFormat: @"Date/Time:       %@\n", report.systemInfo.timestamp];
         [text appendFormat: @"OS Version:      %@ %@ (%@)\n", osName, report.systemInfo.operatingSystemVersion, osBuild];
-        [text appendFormat: @"Report Version:  104\n"];        
+        if (reporterVersion) {
+            [text appendFormat: @"Framework Version: %@\n", reporterVersion];
+        }
+        [text appendFormat: @"Report Version:  106\n"];
     }
 
     [text appendString: @"\n"];
@@ -254,7 +274,7 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
     [text appendFormat: @"Exception Codes: %@ at 0x%" PRIx64 "\n", report.signalInfo.code, report.signalInfo.address];
     
     for (PLCrashReportThreadInfo *thread in report.threads) {
-        if (thread.crashed) {
+        if (thread.crashed && !report.hasExceptionInfo) {
             [text appendFormat: @"Crashed Thread:  %ld\n", (long) thread.threadNumber];
             break;
         }
@@ -291,7 +311,7 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
     PLCrashReportThreadInfo *crashed_thread = nil;
     NSInteger maxThreadNum = 0;
     for (PLCrashReportThreadInfo *thread in report.threads) {
-        if (thread.crashed) {
+        if (thread.crashed && !report.hasExceptionInfo) {
             [text appendFormat: @"Thread %ld Crashed:\n", (long) thread.threadNumber];
             crashed_thread = thread;
         } else {
@@ -360,8 +380,20 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
 
         NSString *uuid;
         /* Fetch the UUID if it exists */
-        if (imageInfo.hasImageUUID)
-            uuid = imageInfo.imageUUID;
+        if (imageInfo.hasImageUUID) {
+            // uuid = imageInfo.imageUUID;
+            NSMutableString *standardizedUUID = [NSMutableString stringWithString:[imageInfo.imageUUID uppercaseString]];
+            
+            for (NSUInteger i = 0; i < uuidSeparatorCount; ++i) {
+                NSUInteger insertionIndex = uuidSeparatorStartIndex + i * uuidSeparatorIndexDelta;
+                
+                if (standardizedUUID.length > insertionIndex) {
+                    [standardizedUUID insertString:uuidSeparator atIndex:insertionIndex];
+                }
+            }
+
+            uuid = [NSString stringWithString:standardizedUUID];
+        }
         else
             uuid = @"???";
         
@@ -441,13 +473,30 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
         } else {
             fmt = @"%10#" PRIx64 " - %10#" PRIx64 " %@%@ %@  <%@> %@\n";
         }
+        
+        NSString *binaryName = nil;
+        
+        NSURL *imageURL = [NSURL fileURLWithPath:imageInfo.imageName];
+        NSString *possibleBundlePath = [[[[imageURL URLByDeletingLastPathComponent]
+                                         URLByDeletingLastPathComponent] URLByDeletingLastPathComponent] path];
+        
+        NSBundle *imageBundle = [[NSFileManager defaultManager] isReadableFileAtPath:possibleBundlePath] ? [NSBundle bundleWithPath:possibleBundlePath] : nil;
+        
+        if (nil == imageBundle || nil == imageBundle.bundleIdentifier)
+        {
+            binaryName = [imageInfo.imageName lastPathComponent];
+        }
+        else
+        {
+            binaryName = [imageBundle.bundleIdentifier copy];
+        }
 
         [text appendFormat: fmt,
                             imageInfo.imageBaseAddress,
                             imageInfo.imageBaseAddress + (MAX(1, imageInfo.imageSize) - 1), // The Apple format uses an inclusive range
                             binaryDesignator,
-                            [imageInfo.imageName lastPathComponent],
-                            archName,
+                            binaryName,//[imageInfo.imageName lastPathComponent],
+                            [NSString stringWithFormat:@"(%@)", archName, nil], //archName,
                             uuid,
                             imageInfo.imageName];
     }
@@ -504,10 +553,29 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
     uint64_t pcOffset = 0x0;
     NSString *imageName = @"\?\?\?";
     NSString *symbolString = nil;
+    
+    NSString *mainAppBundlePath = [[report.processInfo.processPath stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+    NSString *imageBundlePath = @"";
 
     PLCrashReportBinaryImageInfo *imageInfo = [report imageForAddress:frameInfo.instructionPointer];
     if (imageInfo != nil) {
-        imageName = [imageInfo.imageName lastPathComponent];
+        //imageName = [imageInfo.imageName lastPathComponent];
+        
+        NSURL *imageURL = [NSURL fileURLWithPath:imageInfo.imageName];
+        imageBundlePath = [[[[imageURL URLByDeletingLastPathComponent]
+                            URLByDeletingLastPathComponent] URLByDeletingLastPathComponent] path];
+        
+        NSBundle *imageBundle = [[NSFileManager defaultManager] isReadableFileAtPath:imageBundlePath] ? [NSBundle bundleWithPath:imageBundlePath] : nil;
+        
+        if (nil == imageBundle || nil == imageBundle.bundleIdentifier)
+        {
+            imageName = [imageInfo.imageName lastPathComponent];
+        }
+        else
+        {
+            imageName = [imageBundle.bundleIdentifier copy];
+        }
+        
         baseAddress = imageInfo.imageBaseAddress;
         pcOffset = frameInfo.instructionPointer - imageInfo.imageBaseAddress;
     } else if (frameInfo.instructionPointer) {
@@ -516,7 +584,9 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
 
     /* If symbol info is available, the format used in Apple's reports is Sym + OffsetFromSym. Otherwise,
      * the format used is imageBaseAddress + offsetToIP */
-    if (frameInfo.symbolInfo != nil) {
+    if (frameInfo.symbolInfo != nil &&
+        ![imageName isEqualToString:report.applicationInfo.applicationIdentifier] &&
+        ![imageBundlePath isEqualToString:mainAppBundlePath]) {
         NSString *symbolName = frameInfo.symbolInfo.symbolName;
 
         /* Apple strips the _ symbol prefix in their reports. */
