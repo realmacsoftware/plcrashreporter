@@ -32,7 +32,11 @@
 
 #import <Foundation/Foundation.h>
 
+#if __has_include(<CrashReporter/PLCrashReportFormatter.h>)
+#import <CrashReporter/PLCrashReportFormatter.h>
+#else
 #import "PLCrashReportFormatter.h"
+#endif
 
 /**
  * Supported text output formats.
@@ -46,14 +50,7 @@ typedef enum {
 } PLCrashReportTextFormat;
 
 
-@interface PLCrashReportTextFormatter : NSObject <PLCrashReportFormatter> {
-@private
-    /** Text output format. */
-    PLCrashReportTextFormat _textFormat;
-
-    /** Encoding to use for string output. */
-    NSStringEncoding _stringEncoding;
-}
+@interface PLCrashReportTextFormatter : NSObject <PLCrashReportFormatter>
 
 + (NSString *) stringValueForCrashReport: (PLCrashReport *) report withTextFormat: (PLCrashReportTextFormat) textFormat;
 

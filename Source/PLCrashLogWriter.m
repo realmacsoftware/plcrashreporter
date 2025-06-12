@@ -40,7 +40,12 @@
 
 #import <stdatomic.h>
 
+#if __has_include(<CrashReporter/PLCrashReport.h>)
+#import <CrashReporter/PLCrashReport.h>
+#else
 #import "PLCrashReport.h"
+#endif
+
 #import "PLCrashLogWriter.h"
 #import "PLCrashLogWriterEncoding.h"
 #import "PLCrashAsyncSignalInfo.h"
@@ -260,7 +265,7 @@ static void plprotobuf_cbinary_data_init (PLProtobufCBinaryData *data, const voi
 
 static void plprotobuf_cbinary_data_string_init (PLProtobufCBinaryData *data, const char *value) {
     data->data = (void *)value;
-    data->len = strlen(value);
+    data->len = value ? strlen(value) : 0;
 }
 
 static void plprotobuf_cbinary_data_nsstring_init (PLProtobufCBinaryData *data, NSString *value) {
@@ -270,6 +275,7 @@ static void plprotobuf_cbinary_data_nsstring_init (PLProtobufCBinaryData *data, 
 static void plprotobuf_cbinary_data_free (PLProtobufCBinaryData *data) {
     if (data != NULL && data->data != NULL) {
         free(data->data);
+        data->data = NULL;
         data->len = 0;
     }
 }
@@ -332,7 +338,7 @@ plcrash_error_t plcrash_log_writer_init (plcrash_log_writer_t *writer,
         PLCrashProcessInfo *pinfo = [PLCrashProcessInfo currentProcessInfo];
         if (pinfo == nil) {
             /* Should only occur if the process is no longer valid */
-            PLCF_DEBUG("Could not retreive process info for target");
+            PLCF_DEBUG("Could not retrieve process info for target");
             return PLCRASH_EINVAL;
         }
 
@@ -369,7 +375,7 @@ plcrash_error_t plcrash_log_writer_init (plcrash_log_writer_t *writer,
                     plprotobuf_cbinary_data_nsstring_init(&writer->process_info.parent_process_name, parentInfo.processName);
                 }
             } else {
-                PLCF_DEBUG("Could not retreive parent process name: %s", strerror(errno));
+                PLCF_DEBUG("Could not retrieve parent process name: %s", strerror(errno));
             }
 
         }
@@ -450,8 +456,8 @@ plcrash_error_t plcrash_log_writer_init (plcrash_log_writer_t *writer,
     }
     plprotobuf_cbinary_data_string_init(&writer->system_info.build, build);
 
-#if TARGET_OS_IPHONE
-    /* iOS, tvOS and Mac Catalyst */
+#if TARGET_OS_IPHONE || TARGET_OS_MAC
+    /* iOS, tvOS, macOS and Mac Catalyst */
     {
         NSProcessInfo *processInfo = [NSProcessInfo processInfo];
         NSOperatingSystemVersion systemVersion = processInfo.operatingSystemVersion;
@@ -460,31 +466,6 @@ plcrash_error_t plcrash_log_writer_init (plcrash_log_writer_t *writer,
             systemVersionString = [systemVersionString stringByAppendingFormat:@".%ld", (long)systemVersion.patchVersion];
         }
         plprotobuf_cbinary_data_nsstring_init(&writer->system_info.version, systemVersionString);
-    }
-#elif TARGET_OS_MAC
-    /* macOS */
-    {
-        SInt32 major, minor, bugfix;
-
-        /* Fetch the major, minor, and bugfix versions.
-         * Fetching the OS version should not fail. */
-        if (Gestalt(gestaltSystemVersionMajor, &major) != noErr) {
-            PLCF_DEBUG("Could not retrieve system major version with Gestalt");
-            return PLCRASH_EINTERNAL;
-        }
-        if (Gestalt(gestaltSystemVersionMinor, &minor) != noErr) {
-            PLCF_DEBUG("Could not retrieve system minor version with Gestalt");
-            return PLCRASH_EINTERNAL;
-        }
-        if (Gestalt(gestaltSystemVersionBugFix, &bugfix) != noErr) {
-            PLCF_DEBUG("Could not retrieve system bugfix version with Gestalt");
-            return PLCRASH_EINTERNAL;
-        }
-
-        /* Compose the string */
-        char *version;
-        asprintf(&version, "%" PRId32 ".%" PRId32 ".%" PRId32, (int32_t)major, (int32_t)minor, (int32_t)bugfix);
-        plprotobuf_cbinary_data_string_init(&writer->system_info.version, version);
     }
 #else
 #error Unsupported Platform
@@ -818,7 +799,7 @@ static size_t plcrash_writer_write_thread_register (plcrash_async_file_t *file, 
  * @param cursor The cursor from which to acquire frame registers.
  */
 static size_t plcrash_writer_write_thread_registers (plcrash_async_file_t *file, task_t task, plframe_cursor_t *cursor) {
-    plframe_error_t frame_err;
+    PLCF_UNUSED_IN_RELEASE plframe_error_t frame_err;
     uint32_t regCount = (uint32_t) plframe_cursor_get_regcount(cursor);
     size_t rv = 0;
     

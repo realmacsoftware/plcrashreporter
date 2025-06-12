@@ -29,8 +29,16 @@
 #import <Foundation/Foundation.h>
 #import <mach/mach.h>
 
+#ifndef PLCRASH_REPORTER_H
+#define PLCRASH_REPORTER_H
+
+#if __has_include(<CrashReporter/PLCrashReporterConfig.h>)
+#import <CrashReporter/PLCrashReporterConfig.h>
+#import <CrashReporter/PLCrashMacros.h>
+#else
 #import "PLCrashReporterConfig.h"
 #import "PLCrashMacros.h"
+#endif
 
 @class PLCrashMachExceptionServer;
 @class PLCrashMachExceptionPortSet;
@@ -55,7 +63,7 @@ typedef void (*PLCrashReporterPostCrashSignalCallback)(siginfo_t *info, ucontext
  * @ingroup types
  *
  * This structure contains callbacks supported by PLCrashReporter to allow the host application to perform
- * additional tasks prior to program termination after a crash has occured.
+ * additional tasks prior to program termination after a crash has occurred.
  *
  * @sa The @ref async_safety documentation.
  */
@@ -82,35 +90,7 @@ typedef struct PLCrashReporterCallbacks {
     PLCrashReporterPostCrashSignalCallback handleSignal;
 } PLCrashReporterCallbacks;
 
-@interface PLCrashReporter : NSObject {
-@private
-    /** Reporter configuration */
-    __strong PLCrashReporterConfig *_config;
-
-    /** YES if the crash reporter has been enabled */
-    BOOL _enabled;
-    
-#if PLCRASH_FEATURE_MACH_EXCEPTIONS
-    /** The backing Mach exception server, if any. Nil if the reporter has not been enabled, or if
-     * the configured signal handler type is not PLCrashReporterSignalHandlerTypeMach. */
-    __strong PLCrashMachExceptionServer *_machServer;
-    
-    /** Previously registered Mach exception ports, if any. */
-    __strong PLCrashMachExceptionPortSet *_previousMachPorts;
-#endif /* PLCRASH_FEATURE_MACH_EXCEPTIONS */
-
-    /** Application identifier */
-    __strong NSString *_applicationIdentifier;
-
-    /** Application version */
-    __strong NSString *_applicationVersion;
-    
-    /** Application marketing version */
-    __strong NSString *_applicationMarketingVersion;
-
-    /** Path to the crash reporter internal data directory */
-    __strong NSString *_crashReportDirectory;
-}
+@interface PLCrashReporter : NSObject
 
 + (PLCrashReporter *) sharedReporter PLCR_DEPRECATED;
 
@@ -125,11 +105,10 @@ typedef struct PLCrashReporterCallbacks {
 
 - (NSData *) generateLiveReportWithThread: (thread_t) thread;
 - (NSData *) generateLiveReportWithThread: (thread_t) thread error: (NSError **) outError;
-- (NSData *) generateLiveReportWithThread: (thread_t) thread exception: (NSException *) exception error: (NSError **) outError; // DM
-
+- (NSData *) generateLiveReportWithThread: (thread_t) thread exception: (NSException *) exception error: (NSError **) outError;
 - (NSData *) generateLiveReport;
 - (NSData *) generateLiveReportAndReturnError: (NSError **) outError;
-- (NSData *) generateLiveReportWithException: (NSException *) exception error: (NSError **) outError; // DM
+- (NSData *) generateLiveReportWithException: (NSException *) exception error: (NSError **) outError;
 
 - (BOOL) purgePendingCrashReport;
 - (BOOL) purgePendingCrashReportAndReturnError: (NSError **) outError;
@@ -140,10 +119,17 @@ typedef struct PLCrashReporterCallbacks {
 
 - (void) setCrashCallbacks: (PLCrashReporterCallbacks *) callbacks;
 
+/**
+ * Return the path to live crash report (which may not yet, or ever, exist).
+ */
+- (NSString *) crashReportPath;
+
+/**
+ * Custom data to save in the crash report.
+ */
 @property(nonatomic, strong) NSData *customData;
 
 @end
-
 
 // DM
 typedef NS_ENUM(NSUInteger, PLReportType)
@@ -160,3 +146,4 @@ typedef NS_ENUM(NSUInteger, PLReportType)
 - (void)reporter:(PLCrashReporter *)reporter didFailGenerateReportOfType:(PLReportType)reportType withError:(NSError *)error;
 
 @end
+#endif

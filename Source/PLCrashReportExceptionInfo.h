@@ -27,20 +27,14 @@
  */
 
 #import <Foundation/Foundation.h>
+
+#if __has_include(<CrashReporter/PLCrashReportThreadInfo.h>)
+#import <CrashReporter/PLCrashReportThreadInfo.h>
+#else
 #import "PLCrashReportThreadInfo.h"
+#endif
 
-
-@interface PLCrashReportExceptionInfo : NSObject {
-@private
-    /** Name */
-    __strong NSString *_name;
-
-    /** Reason */
-    __strong NSString *_reason;
-
-    /** Ordered list of PLCrashReportStackFrame instances, or nil if unavailable. */
-    __strong NSArray *_stackFrames;
-}
+@interface PLCrashReportExceptionInfo : NSObject
 
 - (id) initWithExceptionName: (NSString *) name reason: (NSString *) reason;
 

@@ -28,23 +28,19 @@
 
 #import <Foundation/Foundation.h>
 
+#ifndef PLCRASH_REPORT_THREAD_INFO_H
+#define PLCRASH_REPORT_THREAD_INFO_H
+
+#if __has_include(<CrashReporter/PLCrashReportStackFrameInfo.h>)
+#import <CrashReporter/PLCrashReportStackFrameInfo.h>
+#import <CrashReporter/PLCrashReportRegisterInfo.h>
+#else
 #import "PLCrashReportStackFrameInfo.h"
 #import "PLCrashReportRegisterInfo.h"
+#endif
 
-@interface PLCrashReportThreadInfo : NSObject {
-@private
-    /** The thread number. Should be unique within a given crash log. */
-    NSInteger _threadNumber;
 
-    /** Ordered list of PLCrashReportStackFrame instances */
-    __strong NSArray *_stackFrames;
-
-    /** YES if this thread crashed. */
-    BOOL _crashed;
-
-    /** List of PLCrashReportRegister instances. Will be empty if _crashed is NO. */
-    __strong NSArray *_registers;
-}
+@interface PLCrashReportThreadInfo : NSObject
 
 - (id) initWithThreadNumber: (NSInteger) threadNumber
                 stackFrames: (NSArray *) stackFrames
@@ -75,3 +71,5 @@
 @property(nonatomic, readonly, strong) NSArray *registers;
 
 @end
+
+#endif

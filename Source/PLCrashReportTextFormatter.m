@@ -47,7 +47,14 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
 /**
  * Formats PLCrashReport data as human-readable text.
  */
-@implementation PLCrashReportTextFormatter
+@implementation PLCrashReportTextFormatter {
+
+    /** Text output format. */
+    PLCrashReportTextFormat _textFormat;
+
+    /** Encoding to use for string output. */
+    NSStringEncoding _stringEncoding;
+}
 
 static const NSUInteger uuidSeparatorStartIndex = 8;
 static const NSUInteger uuidSeparatorCount = 4;
@@ -82,7 +89,7 @@ static NSString *uuidSeparator = @"-";
 
 	/* Header */
 	
-    /* Map to apple style OS nane */
+    /* Map to apple style OS name */
     NSString *osName;
     switch (report.systemInfo.operatingSystem) {
         case PLCrashReportOperatingSystemMacOSX:
@@ -403,7 +410,7 @@ static NSString *uuidSeparator = @"-";
             switch (imageInfo.codeType.type) {
                 case CPU_TYPE_ARM:
                     /* Apple includes subtype for ARM binaries. */
-                    switch (imageInfo.codeType.subtype) {
+                    switch (imageInfo.codeType.subtype & ~CPU_SUBTYPE_MASK) {
                         case CPU_SUBTYPE_ARM_V6:
                             archName = @"armv6";
                             break;
@@ -424,7 +431,7 @@ static NSString *uuidSeparator = @"-";
                     
                 case CPU_TYPE_ARM64:
                     /* Apple includes subtype for ARM64 binaries. */
-                    switch (imageInfo.codeType.subtype) {
+                    switch (imageInfo.codeType.subtype & ~CPU_SUBTYPE_MASK) {
                         case CPU_SUBTYPE_ARM64_ALL:
                             archName = @"arm64";
                             break;

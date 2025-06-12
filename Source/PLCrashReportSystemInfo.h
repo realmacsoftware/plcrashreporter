@@ -27,7 +27,13 @@
  */
 
 #import <Foundation/Foundation.h>
-#include "PLCrashMacros.h"
+
+#if __has_include(<CrashReporter/PLCrashMacros.h>)
+#import <CrashReporter/PLCrashMacros.h>
+#else
+#import "PLCrashMacros.h"
+#endif
+
 @class PLCrashReportProcessorInfo;
 
 /**
@@ -106,26 +112,7 @@ PLCR_EXTERNAL_DEPRECATED_NOWARN_PUSH();
 extern PLCrashReportArchitecture PLCrashReportHostArchitecture PLCR_EXTERNAL_DEPRECATED;
 PLCR_EXTERNAL_DEPRECATED_NOWARN_PUSH();
 
-@interface PLCrashReportSystemInfo : NSObject {
-@private
-    /** Operating system */
-    PLCrashReportOperatingSystem _operatingSystem;
-    
-    /** Operating system version */
-    __strong NSString *_osVersion;
-    
-    /** OS build. May be nil. */
-    __strong NSString *_osBuild;
-    
-    /** Architecture */
-    PLCrashReportArchitecture _architecture;
-    
-    /** Date crash report was generated. May be nil if the date is unknown. */
-    __strong NSDate *_timestamp;
-
-    /** Processor information. */
-    __strong PLCrashReportProcessorInfo *_processorInfo;
-}
+@interface PLCrashReportSystemInfo : NSObject
 
 - (id) initWithOperatingSystem: (PLCrashReportOperatingSystem) operatingSystem 
         operatingSystemVersion: (NSString *) operatingSystemVersion

@@ -26,7 +26,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#import "PLCrashMacros.h"
+#import "PLCrashCompatConstants.h"
 #import "PLCrashHostInfo.h"
 #import "PLCrashSysctl.h"
 #import "PLCrashAsync.h"
@@ -43,7 +43,11 @@
  *
  * The PLCrashHostInfo provides methods to access basic information about the current host.
  */
-@implementation PLCrashHostInfo
+@implementation PLCrashHostInfo {
+
+    /** The Darwin (xnu) release version (eg, kern.osversion) */
+    PLCrashHostInfoVersion _darwinVersion;
+}
 
 @synthesize darwinVersion = _darwinVersion;
 

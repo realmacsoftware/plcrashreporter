@@ -26,12 +26,26 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if __has_include(<CrashReporter/PLCrashReportExceptionInfo.h>)
+#import <CrashReporter/PLCrashReportExceptionInfo.h>
+#else
 #import "PLCrashReportExceptionInfo.h"
+#endif
 
 /**
  * If a crash is triggered by an uncaught Objective-C exception, the exception name and reason will be made available.
  */
-@implementation PLCrashReportExceptionInfo
+@implementation PLCrashReportExceptionInfo {
+
+    /** Name */
+    __strong NSString *_name;
+
+    /** Reason */
+    __strong NSString *_reason;
+
+    /** Ordered list of PLCrashReportStackFrame instances, or nil if unavailable. */
+    __strong NSArray *_stackFrames;
+}
 
 @synthesize exceptionName = _name;
 @synthesize exceptionReason = _reason;

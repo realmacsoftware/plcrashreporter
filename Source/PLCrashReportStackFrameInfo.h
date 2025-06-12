@@ -27,16 +27,14 @@
  */
 
 #import <Foundation/Foundation.h>
+
+#if __has_include(<CrashReporter/PLCrashReportSymbolInfo.h>)
+#import <CrashReporter/PLCrashReportSymbolInfo.h>
+#else
 #import "PLCrashReportSymbolInfo.h"
+#endif
 
-@interface PLCrashReportStackFrameInfo : NSObject {
-@private
-    /** Frame instruction pointer. */
-    uint64_t _instructionPointer;
-
-    /** Symbol information, if available. Otherwise, will be nil. */
-    __strong PLCrashReportSymbolInfo *_symbolInfo;
-}
+@interface PLCrashReportStackFrameInfo : NSObject
 
 - (id) initWithInstructionPointer: (uint64_t) instructionPointer symbolInfo: (PLCrashReportSymbolInfo *) symbolInfo;
 

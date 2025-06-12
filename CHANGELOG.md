@@ -1,5 +1,91 @@
 # PLCrashReporter Change Log
 
+## Version 1.12.0
+
+* **[Improvement]** Make crash report size configurable.
+
+___
+
+## Version 1.11.3
+
+* **[Improvement]** Update target iOS and tvOS version to 12.0.
+* **[Improvement]** Support Xcode 16 build.
+* **[Fix]** Fix endless loop when PLCrashReporter was set up during `load`.
+
+___
+
+## Version 1.11.2
+
+* **[Improvement]** Update PLCrashReporter to include privacy manifest.
+* **[Improvement]** Increase the maximum report size to 1MB.
+
+___
+
+## Version 1.11.1
+
+* **[Improvement]** Disable treating warnings as errors in code to avoid blockers when new Xcode warnings are introduced.
+* **[Improvement]** Add caught exception logging to PLCrashReporter to generate reports from specific exception.
+* **[Improvement]** Fix Interface declarations of instance variables (OBJC_INTERFACE_IVARS) warnings.
+
+___
+
+## Version 1.11.0
+
+* **[Feature]** Add Xcode 14 support. Xcode 11 and Xcode 12 are out of support now.
+* **[Improvement]** Fix analyzer warnings.
+
+___
+
+## Version 1.10.2
+
+* **[Fix]** Config ignored `shouldRegisterUncaughtExceptionHandler` parameter in constructor.
+* **[Improvement]** Update `protobuf-c` to version 1.4.0.
+* **[Improvement]** Fix Xcode 13 deprecated build settings that might broke incremental builds (it drops workaround for Xcode's 12.0-12.4 bug). It only affects projects that use PLCrashReporter as sources.
+
+___
+
+## Version 1.10.1
+
+* **[Improvement]** Specified minimum cocoapods version in podspec to 1.10.0
+* **[Improvement]** Mark `PLCrashReporter.crashReportPath` method as public.
+
+___
+
+## Version 1.10.0
+
+* **[Fix]** Fix error `Undefined symbols for architecture arm64` while building PLCrashReporter for simulator on Xcode 12.4 and higher.
+* **[Fix]** Fix Cycle in dependencies error happening when building project from sources multiple times.
+* **[Feature]** Distribute XCFramework via Cocoapods and Carthage. The XCFramework will contain static libs only.
+* **[Fix]** Include plcrashutil in all release archives
+
+___
+
+## Version 1.9.0
+
+* **[Fix]** Fix `double-quoted` warnings in Xcode 12.
+* **[Fix]** Fix memory leak during stack trace unwinding.
+* **[Feature]** Add an API to customize data path.
+
+___
+
+## Version 1.8.1
+
+* Re-build Apple Silicon binaries with [Xcode 12.2 Release Candidate](https://developer.apple.com/news/releases/?id=11052020h) to [be able to](https://developer.apple.com/news/releases/?id=11052020i) submit the applications that use the framework as a binary to the App Store.
+
+___
+
+## Version 1.8.0
+
+* Drop support of old versions of iOS and macOS. The minimal version is iOS 9 and macOS 10.9 now.
+* Add Apple Silicon support. Note that `arm64` for iOS and tvOS simulators is available only in xcframework or SwiftPM.
+* Support saving custom data in crash report, see `PLCrashReporter.customData` property.
+* Fix exported symbols list for applying `PLCRASHREPORTER_PREFIX` prefix.
+* Fix Xcode 12 compatibility if the framework is used from sources.
+* Fix getting the subtype of device architecture on iOS 14.
+* Fix crash on collecting register values on `arm64e` devices with iOS 14.
+
+___
+
 ## Version 1.7.2
 
 * Fix building on Xcode 12 beta.

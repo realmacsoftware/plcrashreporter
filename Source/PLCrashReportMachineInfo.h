@@ -28,22 +28,13 @@
 
 #import <Foundation/Foundation.h>
 
+#if __has_include(<CrashReporter/PLCrashReportProcessorInfo.h>)
+#import <CrashReporter/PLCrashReportProcessorInfo.h>
+#else
 #import "PLCrashReportProcessorInfo.h"
+#endif
 
-@interface PLCrashReportMachineInfo : NSObject {
-@private
-    /** The hardware model name (eg, MacBookPro6,1). This may be unavailable, and this property will be nil. */
-    __strong NSString *_modelName;
-    
-    /** The processor type. */
-    __strong PLCrashReportProcessorInfo *_processorInfo;
-    
-    /* The number of actual physical processor cores. */
-    NSUInteger _processorCount;
-    
-    /* The number of logical processors. */
-    NSUInteger _logicalProcessorCount;
-}
+@interface PLCrashReportMachineInfo : NSObject
 
 - (id) initWithModelName: (NSString *) modelName
            processorInfo: (PLCrashReportProcessorInfo *) processorInfo

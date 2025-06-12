@@ -26,8 +26,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if __has_include(<CrashReporter/PLCrashReportSystemInfo.h>)
+#import <CrashReporter/PLCrashReportSystemInfo.h>
+#import <CrashReporter/PLCrashReportProcessorInfo.h>
+#else
 #import "PLCrashReportSystemInfo.h"
 #import "PLCrashReportProcessorInfo.h"
+#endif
 
 /**
  * @ingroup constants
@@ -80,7 +85,26 @@ PLCrashReportArchitecture PLCrashReportHostArchitecture =
  *
  * This contains information about the host system, including operating system and architecture.
  */
-@implementation PLCrashReportSystemInfo
+@implementation PLCrashReportSystemInfo {
+
+    /** Operating system */
+    PLCrashReportOperatingSystem _operatingSystem;
+    
+    /** Operating system version */
+    __strong NSString *_osVersion;
+    
+    /** OS build. May be nil. */
+    __strong NSString *_osBuild;
+    
+    /** Architecture */
+    PLCrashReportArchitecture _architecture;
+    
+    /** Date crash report was generated. May be nil if the date is unknown. */
+    __strong NSDate *_timestamp;
+
+    /** Processor information. */
+    __strong PLCrashReportProcessorInfo *_processorInfo;
+}
 
 /**
  * Initialize the system info data object.

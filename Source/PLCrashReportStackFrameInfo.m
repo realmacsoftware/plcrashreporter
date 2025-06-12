@@ -26,12 +26,23 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if __has_include(<CrashReporter/PLCrashReportStackFrameInfo.h>)
+#import <CrashReporter/PLCrashReportStackFrameInfo.h>
+#else
 #import "PLCrashReportStackFrameInfo.h"
+#endif
 
 /**
  * Crash log stack frame information.
  */
-@implementation PLCrashReportStackFrameInfo
+@implementation PLCrashReportStackFrameInfo {
+
+    /** Frame instruction pointer. */
+    uint64_t _instructionPointer;
+
+    /** Symbol information, if available. Otherwise, will be nil. */
+    __strong PLCrashReportSymbolInfo *_symbolInfo;
+}
 
 @synthesize instructionPointer = _instructionPointer;
 @synthesize symbolInfo = _symbolInfo;

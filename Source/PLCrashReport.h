@@ -28,6 +28,24 @@
 
 #import <Foundation/Foundation.h>
 
+#ifndef PLCRASH_REPORT_H
+#define PLCRASH_REPORT_H
+
+#if __has_include(<CrashReporter/PLCrashReportApplicationInfo.h>)
+#import <CrashReporter/PLCrashReportApplicationInfo.h>
+#import <CrashReporter/PLCrashReportBinaryImageInfo.h>
+#import <CrashReporter/PLCrashReportExceptionInfo.h>
+#import <CrashReporter/PLCrashReportMachineInfo.h>
+#import <CrashReporter/PLCrashReportMachExceptionInfo.h>
+#import <CrashReporter/PLCrashReportProcessInfo.h>
+#import <CrashReporter/PLCrashReportProcessorInfo.h>
+#import <CrashReporter/PLCrashReportRegisterInfo.h>
+#import <CrashReporter/PLCrashReportSignalInfo.h>
+#import <CrashReporter/PLCrashReportStackFrameInfo.h>
+#import <CrashReporter/PLCrashReportSymbolInfo.h>
+#import <CrashReporter/PLCrashReportSystemInfo.h>
+#import <CrashReporter/PLCrashReportThreadInfo.h>
+#else
 #import "PLCrashReportApplicationInfo.h"
 #import "PLCrashReportBinaryImageInfo.h"
 #import "PLCrashReportExceptionInfo.h"
@@ -41,6 +59,7 @@
 #import "PLCrashReportSymbolInfo.h"
 #import "PLCrashReportSystemInfo.h"
 #import "PLCrashReportThreadInfo.h"
+#endif
 
 /** 
  * @ingroup constants
@@ -80,44 +99,7 @@ struct PLCrashReportFileHeader {
  */
 typedef struct _PLCrashReportDecoder _PLCrashReportDecoder;
 
-@interface PLCrashReport : NSObject {
-@private
-    /** Private implementation variables (used to hide the underlying protobuf parser) */
-    _PLCrashReportDecoder *_decoder;
-
-    /** System info */
-    __strong PLCrashReportSystemInfo *_systemInfo;
-    
-    /** Machine info */
-    __strong PLCrashReportMachineInfo *_machineInfo;
-
-    /** Application info */
-    __strong PLCrashReportApplicationInfo *_applicationInfo;
-    
-    /** Process info */
-    __strong PLCrashReportProcessInfo *_processInfo;
-
-    /** Signal info */
-    __strong PLCrashReportSignalInfo *_signalInfo;
-    
-    /** Mach exception info */
-    __strong PLCrashReportMachExceptionInfo *_machExceptionInfo;
-
-    /** Thread info (PLCrashReportThreadInfo instances) */
-    __strong NSArray *_threads;
-
-    /** Binary images (PLCrashReportBinaryImageInfo instances */
-    __strong NSArray *_images;
-
-    /** Exception information (may be nil) */
-    __strong PLCrashReportExceptionInfo *_exceptionInfo;
-
-    /** User defined information (may be nil) */
-    __strong NSData *_customData;
-
-    /** Report UUID */
-    CFUUIDRef _uuid;
-}
+@interface PLCrashReport : NSObject
 
 - (id) initWithData: (NSData *) encodedData error: (NSError **) outError;
 
@@ -207,3 +189,5 @@ typedef struct _PLCrashReportDecoder _PLCrashReportDecoder;
 @property(nonatomic, readonly) CFUUIDRef uuidRef;
 
 @end
+
+#endif
